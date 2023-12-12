@@ -1,0 +1,103 @@
+<!-- register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <style>
+        body{
+            /* 设置背景渐变 */
+            background-image: linear-gradient(to left,
+            #C64642,#C64642);
+            display: flex;
+            justify-content: center;
+        }
+        .a{
+            position:relative;
+            top: 100px;
+            width: 1100px;
+            height: 700px;
+            box-shadow: 0 5px 15px rgba(0,0,0,.8);
+            display: flex;
+        }
+        .b{
+            width: 800px;
+            height: 700px;
+            background-image: url("static/brand.png");
+            /* 让图片适应大小 */
+            background-size: cover;
+        }
+        .c{
+            width: 300px;
+            height: 700px;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .d{
+            width: 250px;
+            height: 500px;
+        }
+        .d h1{
+            font: 900 30px '';
+        }
+        .e{
+            width: 230px;
+            margin: 20px 0;
+            outline: none;
+            border: 0;
+            padding: 10px;
+            border-bottom: 3px solid rgb(80,80,170);
+            font: 900 16px '';
+        }
+        .f{
+            float: right;
+            margin: 10px 0;
+        }
+        .g{
+           /* position: absolute; */
+            border:none;
+            margin: 20px;
+            bottom: 40px;
+            display: block;
+            width: 200px;
+            height: 60px;
+            font: 900 30px '';
+            text-decoration: none;
+            line-height: 50px;
+            border-radius: 30px;
+            background-image: linear-gradient(to left,
+            #C64642,#F5F3EC);
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="a">
+        <div class="b"></div>
+        <div class="c">
+            <div class="d">
+                <!-- 原注册部分嵌入到新结构中 -->
+                <h2>注册</h2>
+                <form method="post" action="{{ url_for('register') }}">
+                    <label for="username">用户名:</label>
+                    <input type="text" class="e" id="username" name="username" required placeholder="USER NAME">
+                    <label for="password">密码:</label>
+                    <input type="password" class="e" id="password" name="password" required placeholder="PASSWORD">
+                    <label for="address">收货地址:</label>
+                    <input type="address" class="e" id="address" name="address" required placeholder="ADDRESS">
+                    <label for="telephone">联系电话:</label>
+                    <input type="telephone" class="e" id="telephone" name="telephone" required placeholder="TELEPHONE">
+                    <input type="submit" value="注册" class="g">
+                </form>
+                <!-- 结束嵌入 -->
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
