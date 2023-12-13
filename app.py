@@ -1,30 +1,17 @@
 # app.py
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
-
-from sqlalchemy import CheckConstraint
+from models import Clothing
+from models import User
+from models import db
+from models import ShopCart
+from sqlalchemy import CheckConstraint, func
 
 app = Flask(__name__, static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:314159265@localhost/youyiku'
-db = SQLAlchemy(app)
+app.config['SECRET_KEY'] = 'your_secret_key'
+db.init_app(app)
 
-
-# 用户表的定义，根据你的实际数据库设计修改
-class User(db.Model):
-    __tablename__ = 'User'
-
-    UID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    Uname = db.Column(db.String(20), nullable=False)
-    UPass = db.Column(db.String(20), nullable=False)
-    UAdress = db.Column(db.String(255), nullable=False)
-    UTele = db.Column(db.String(20), nullable=False)
-
-
-# 其他表的定义，类似地根据实际设计修改
-
-# ... 上面的代码不变 ...
-# app.py
-# ... 上面的代码不变 ...
 
 # 登录页面
 @app.route('/login', methods=['GET', 'POST'])
@@ -42,6 +29,8 @@ def login():
             # 验证密码是否匹配
             if user.UPass == password:
                 # 验证成功，可以在这里设置用户登录状态，例如使用 session
+                session['username'] = username
+                session['user_id'] = user.UID
                 return redirect(url_for('index'))
             else:
                 # 密码不匹配，设置错误消息
@@ -76,31 +65,64 @@ def register():
     return render_template('register.html')
 
 
-# ... 下面的代码不变 ...
+@app.route('/logout')
+def logout():
+    # 清除用户的会话信息
+    session.pop('username', None)
+    # 重定向到登录页面或其他页面
+    # return redirect(url_for('login'))
+    username = session.get('username')
+    return redirect(url_for('index'))
+    #return render_template('index.html', username=username)
 
 
-# 定义服装表
-class Clothing(db.Model):
-    __tablename__ = 'Costume'
+@app.route('/clothing/<int:cid>')
+def clothing_detail(cid):
+    # 根据衣服的 CID 查询数据库获取衣服的详细信息
+    username = session.get('username')
+    user_id = session.get('user_id')
+    clothing = Clothing.query.get(cid)
+    print(username)
+    # 渲染详情页模板，将衣服的详细信息传递给模板
+    return render_template('clothing_detail.html', username=username, user_id=user_id, clothing=clothing)
 
-    CID = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    CType = db.Column(db.String(20), nullable=False)
-    UPrice = db.Column(db.Numeric(8, 2), nullable=False)
-    Material = db.Column(db.String(20), nullable=False)
-    Color = db.Column(db.String(20), nullable=False)
-    Size = db.Column(db.Enum('S', 'M', 'L', 'XL', 'XXL', '均码'), nullable=False)
-    AddDate = db.Column(db.DateTime, nullable=False)
-    Sales = db.Column(db.Integer, default=0)
-    Status = db.Column(db.String(10), default='库存充足')
-    PicPath = db.Column(db.String(255))
-    Descrip = db.Column(db.String(255))
+@app.route('/add_to_cart', methods=['POST'])
+def add_to_cart():
+    # 从前端获取衣服信息
+    data = request.get_json()
+    uid = data.get('uid')
+    cid = data.get('cid')
+    number = data.get('number')
 
+    # 查询购物车中是否已存在该 CID
+    existing_cart_item = ShopCart.query.filter_by(UID=uid, CID=cid).first()
 
-# 其他表的定义，类似地根据实际设计修改
+    # 插入购物车表的逻辑...
+    if existing_cart_item:
+        existing_cart_item.number+=number
+    else:
+        new_cartitem = ShopCart(UID=uid, CID=cid, number=number)
+        db.session.add(new_cartitem)
+
+    db.session.commit()
+
+    # 返回一个成功的响应
+    return jsonify({'message': 'success'})
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    username = session.get('username')
+    user_id = session.get('user_id')
+    # print(username)
+    # print(user_id)
+    # clothes = Clothing.query.all()
+    clothes = db.session.query(
+        Clothing.CName,
+        func.max(Clothing.CID).label('CID'),
+        func.max(Clothing.UPrice).label('UPrice'),
+        func.max(Clothing.PicPath).label('PicPath')
+    ).group_by(Clothing.CName).all()
+    return render_template('index.html', clothes=clothes, username=username,user_id=user_id)
 
 
 if __name__ == '__main__':
